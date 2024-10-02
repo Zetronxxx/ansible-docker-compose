@@ -1,0 +1,48 @@
+---
+
+- hosts: "all"
+  become: true
+
+  vars:
+    docker__version: "5:20.10.7"
+
+    docker__compose_v2_version: "2.5.0"
+
+    docker__users: ["test"]
+
+    docker__daemon_json: |
+      "dns": ["8.8.8.8"]
+
+    docker__daemon_environment:
+      - "HTTP_PROXY=http://proxy.a.com:80"
+      - "HTTPS_PROXY=https://proxy.a.com:443"
+
+    docker__daemon_flags:
+      - "-H fd://"
+      - "--debug"
+
+    docker__systemd_override: |
+      [Unit]
+      Invalid=Directive
+
+      [Service]
+      ThisIsJust=ATest
+
+    pip_version_docker_py: '1.10.6'
+    pip_version_docker_compose: '1.9.0'
+
+  roles:
+    - role: "role_under_test"
+    - name: docker-service-deploy wiht default values
+      role: ansible-role-docker-service-deploy
+
+  pre_tasks:
+    - name: Add test user
+      ansible.builtin.user:
+        name: "test"
+        shell: "/bin/bash"
+
+    - name: Run the equivalent of "apt-get update"
+      ansible.builtin.apt:
+        update_cache: true
+      changed_when: false
